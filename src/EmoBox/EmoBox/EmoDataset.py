@@ -1,0 +1,204 @@
+import os
+import json
+import random
+from torch.utils.data import Dataset
+from torch.nn.utils.rnn import pad_sequence
+import soundfile as sf
+import librosa
+import numpy as np
+import logging
+# import torchaudio
+SAMPLING_RATE=16000
+logger = logging.getLogger(__name__)
+
+
+
+"""
+[{
+	key: "Ses01M_impro01_F000"
+	dataset: "iemocap"
+	wav: "Session1/sentences/wav/Ses01M_impro01/Ses01M_impro01_F000.wav"
+    type: "raw" # raw, feature
+	sample_rate: 16000
+	length: 3.2
+	task: "category" # category, valence, arousal
+	emo: "hap"
+	}, 
+    {...}
+]
+"""
+def check_exists(data, data_dir, logger):
+    new_data = []
+    for instance in data:
+        audio_path = instance['wav']
+        
+        if os.path.exists(audio_path):
+            new_data.append(instance)
+    print(f'load in {len(data)} samples, only {len(new_data)} exists in data dir {data_dir}')        
+    return new_data
+
+def replace_label(data, label_map, logger):
+    new_data = []
+    for instance in data:
+        emotion = instance['emo']
+        label = label_map[emotion]
+        instance['emo'] = label
+        new_data.append(instance)
+    return new_data    
+
+def prepare_data_from_jsonl(
+    dataset,
+    meta_data_dir,
+    label_map,
+    fold=1,
+    split_ratio=[80, 20],
+    seed=12,
+):
+    # setting seeds for reproducible code.
+    random.seed(seed)
+
+    
+    # find train/valid/test metadata files
+    train_data_path = os.path.join(meta_data_dir, dataset, f'fold_{fold}', f'{dataset}_train_fold_{fold}.jsonl')
+    test_data_path = os.path.join(meta_data_dir, dataset, f'fold_{fold}', f'{dataset}_test_fold_{fold}.jsonl')
+    valid_data_path = os.path.join(meta_data_dir, dataset, f'fold_{fold}', f'{dataset}_valid_fold_{fold}.jsonl')
+
+    # check existance
+    assert os.path.exists(train_data_path), f'train data path {train_data_path} does not exist!'
+    assert os.path.exists(test_data_path), f'test data path {test_data_path} does not exist!'
+    official_valid = False
+    if os.path.exists(valid_data_path):
+        print(f'using official valid data in {valid_data_path}')
+        official_valid = True
+    else:
+        print(f'since there is no official valid data, use random split for train valid split, with a ratio of {split_ratio}')    
+
+    # load in train & test data
+    train_data = []
+    test_data = []
+    with open(train_data_path) as f:
+        for line in f:
+            train_data.append(json.loads(line.strip()))
+    with open(test_data_path) as f:
+        for line in f:
+            test_data.append(json.loads(line.strip()))
+    if official_valid:
+        with open(valid_data_path) as f:
+            for line in f:
+                valid_data.append(json.loads(line.strip()))
+            
+    train_data = check_exists(train_data, meta_data_dir, logger)
+    test_data = check_exists(test_data, meta_data_dir, logger)
+    if official_valid:
+        valid_data = check_exists(valid_data, meta_data_dir, logger)
+    else:
+        train_data, valid_data = split_sets(train_data, split_ratio)
+        
+    num_train_data = len(train_data)
+    num_valid_data = len(valid_data)
+    num_test_samples = len(test_data)
+    print(f'Num. training samples {num_train_data}')
+    print(f'Num. valid samples {num_valid_data}')
+    print(f'Num. test samples {num_test_samples}')
+
+    
+    print(f'Using label_map {label_map}')
+    train_data = replace_label(train_data, label_map, logger)
+    valid_data = replace_label(valid_data, label_map, logger)
+    test_data = replace_label(test_data, label_map, logger)
+    
+    return train_data, valid_data, test_data
+
+def split_sets(train_data, split_ratio):
+    num_train_data = len(train_data)
+    num_train_nodev_samples = int(num_train_data * split_ratio[0])
+
+    sample_idx = np.arange(num_train_data)
+    random.shuffle(sample_idx)
+    train_nodev_data = [ train_data[idx] for idx in sample_idx[:num_train_nodev_samples]]
+    valid_data = [train_data[idx] for idx in sample_idx[num_train_nodev_samples:]]
+    
+    return train_data, valid_data
+
+# Modified to load audio with soundfile instead of torchaudio
+def read_wav(data):
+    wav_path = data['wav']
+    channel = data['channel']
+    dur = float(data['length'])
+    if 'start_time' in data and 'end_time' in data:
+        start_time = data['start_time']
+        end_time = data['end_time']
+    else:
+        start_time = None
+        end_time = None    
+    if start_time is not None and end_time is not None:
+        # sample_rate = torchaudio.info(wav_path).sample_rate
+        sample_rate = sf.info(wav_path).samplerate
+        frame_offset = int(start_time * sample_rate)
+        num_frames = int(end_time * sample_rate) - frame_offset
+        # wav, sr = torchaudio.load(wav_path, frame_offset=frame_offset, num_frames=num_frames)
+        wav, sr = sf.read(wav_path, start=frame_offset, frames=num_frames,dtype='float32')
+    else:    
+        # wav, sr = torchaudio.load(wav_path)
+        wav, sr = sf.read(wav_path, dtype='float32')
+
+    # Handle multi-channel audio (convert to mono)
+    if wav.ndim > 1:
+        wav = wav.mean(axis=-1)
+
+    if sr != SAMPLING_RATE:
+        # wav = torchaudio.functional.resample(wav, sr, SAMPLING_RATE)
+        wav = librosa.resample(wav, orig_sr=sr, target_sr=SAMPLING_RATE)
+
+    # wav = wav.view(-1)    
+    return wav 
+
+class EmoDataset(Dataset):
+    def __init__(self, dataset, data_dir, meta_data_dir, fold=1, split="train"):
+        super().__init__()
+        self.data_dir = data_dir
+        self.label_map = json.load(
+            open(os.path.join(meta_data_dir, dataset, 'label_map.json'))
+        )
+        train_data, valid_data, test_data = prepare_data_from_jsonl(
+            dataset, meta_data_dir, self.label_map, fold=fold
+        )
+        if split == 'train':
+            self.data_list = train_data
+        elif split == 'valid':
+            self.data_list = valid_data
+        elif split == 'test':
+            self.data_list = test_data
+        else:
+            raise Exception(f'does not support split {split}')        
+        
+    def __len__(self):
+        return len(self.data_list)
+
+    def __getitem__(self, idx):
+        data = self.data_list[idx]
+        key = data["key"]
+        audio = os.path.join(self.data_dir, data["wav"])
+        if not os.path.exists(audio):
+            raise FileNotFoundError(f"{audio} does not exist.")    
+        audio = read_wav(data)
+        
+        label = data['emo']        
+        return{
+            "key": key,
+            "audio": audio,
+            "label": label,
+            # other meta data can be added here
+        }
+
+if __name__ == "__main__":
+    # test code
+    meta_data_dir = 'EmoBox/data'
+    data_dir = './data/'
+    dataset = 'iemocap'
+    fold = 1
+    train_set = EmoDataset(dataset, data_dir, meta_data_dir, fold=fold, split='train')
+    print(f'Num. training samples: {len(train_set)}')
+    for idx in range(3):
+        sample = train_set[idx]
+        print(sample['key'], sample['audio'].shape, sample['label'])

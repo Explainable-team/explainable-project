@@ -1,0 +1,7 @@
+src/EmoBox/downloads/
+src/EmoBox/**/*.wav
+src/EmoBox/**/*.mp3
+src/EmoBox/**/*.flac
+src/EmoBox/**/*.zip
+src/EmoBox/**/*.tar
+.DS_Store
