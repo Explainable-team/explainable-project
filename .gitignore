@@ -216,3 +216,31 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project-generated research artifacts
+outputs/
+output/
+checkpoints/
+models/
+adapters/
+eval_reports/
+reports/
+artifacts/
+runs/
+wandb/
+tensorboard/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+
+# Local raw or processed dataset material
+data/raw/**/*
+!data/raw/README.md
+data/processed/
+data/interim/
+
+# Temporary audio generated during counterfactual analysis
+*.tmp.wav
+*_perturbed.wav
+*_counterfactual.wav

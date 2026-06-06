@@ -1,32 +1,24 @@
-# Source Code Folder
+# Source Code
 
-This folder contains source code used in the project that is **not directly part
-of the experiment scripts**, including external libraries and supporting modules.
-
-In particular, this folder includes the **EmoBox** framework, which is used to
-manage datasets, evaluation protocols, and experiment configuration for
-multimodal emotion recognition.
-
----
+This directory contains supporting source code used by the experiment scripts.
 
 ## EmoBox
 
-**EmoBox** is an open-source framework designed for benchmarking emotion
-recognition models.
+`src/EmoBox` contains the EmoBox framework, which provides metadata and utility
+code for emotion recognition datasets. In this project it is used primarily for:
 
-In this project, EmoBox is used for:
-- Loading dataset metadata (ESD and IEMOCAP)
-- Managing train / validation / test splits
-- Standardizing evaluation pipelines
-- Ensuring consistency across experiments
+- dataset metadata organization
+- fold definitions
+- label maps
+- supporting evaluation and preprocessing utilities
 
-The EmoBox code is included here to make the project easier to run and reproduce.
+EmoBox is external code and is not the primary contribution of this repository.
+Project-specific training, evaluation, and explainability logic is implemented
+in the `script/` directory.
 
----
+## Provenance
 
-## Notes
-
-- EmoBox is **not developed by the authors of this project**.
-- The original EmoBox repository and license information are preserved.
-- Any project-specific logic (training, evaluation, fine-tuning) is implemented
-  outside this folder.
+When preparing an academic submission, cite EmoBox according to its upstream
+README and preserve any upstream license or attribution requirements. If EmoBox
+is updated, record the upstream commit, release, or download date in the
+experiment notes.
