@@ -1,34 +1,28 @@
 # IEMOCAP Dataset
 
-This folder is reserved for the **IEMOCAP (Interactive Emotional Dyadic Motion Capture)**
-dataset.
+This folder is reserved for IEMOCAP, the Interactive Emotional Dyadic Motion
+Capture dataset.
 
-IEMOCAP contains acted and semi-natural conversational speech with emotion labels.
-In this project, IEMOCAP is primarily used for **evaluation and generalization
-testing**, as it better reflects real conversational scenarios.
+Kaggle full-release mirror: https://www.kaggle.com/datasets/dejolilandry/iemocapfullrelease
 
-IMPORTANT: The actual audio files are NOT included in this repository. The dataset must be obtained separately due to licensing restrictions.
+The actual dataset files are not included in this repository. IEMOCAP has
+restrictive access and redistribution terms, so verify that your use complies
+with the official license before downloading, storing, or sharing any files.
 
----
+## Use in This Project
 
-## How IEMOCAP is used in this project
-
-- Used mainly for **zero-shot evaluation**
-- Used as a **held-out test set** after fine-tuning on ESD
-- Emotion labels are mapped as follows:
-  - Angry
-  - Happy (including *Excited*)
-  - Sad
-  - Neutral
-
----
+- Zero-shot evaluation dataset.
+- Held-out cross-dataset evaluation after fine-tuning on ESD.
+- Labels are mapped to `Angry`, `Happy`, `Sad`, and `Neutral`; `Excited` may be
+  merged into `Happy` depending on the experiment.
 
 ## Expected Structure
 
 ```text
-IEMOCAP/
-├── Session1/
-├── Session2/
-├── Session3/
-├── Session4/
-├── Session5/
+data/raw/IEMOCAP/
+|-- Session1/
+|-- Session2/
+|-- Session3/
+|-- Session4/
+`-- Session5/
+```

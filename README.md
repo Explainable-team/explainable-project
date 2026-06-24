@@ -1,29 +1,41 @@
 # Explainable Speech Emotion Recognition with Voxtral and DoRA
 
 This repository contains an academic research workflow for speech emotion
-recognition (SER) with a multimodal large language model. The project studies
-how a Voxtral-mini-3B model can be adapted to emotion classification with
+recognition (SER) with a multimodal large language model. It studies whether
+Voxtral-Mini-3B can be adapted to four-way emotion classification with
 parameter-efficient fine-tuning, evaluated across audio-only and audio-plus-text
-settings, and interpreted with post-hoc counterfactual explanations.
+settings, and interpreted with localized post-hoc counterfactual explanations.
 
-The implementation focuses on four target labels:
+The target label set is:
 
 - Angry
 - Happy
 - Sad
 - Neutral
 
-## Research Objective
+## Abstract
 
-The main objective is to build and evaluate an explainable SER pipeline that:
+Speech emotion recognition is a high-variance task because labels depend on
+speaker identity, language, acted versus conversational speech, recording
+conditions, and annotator subjectivity. This project therefore treats SER as a
+dataset-conditioned classification problem rather than as direct inference of a
+speaker's internal emotional state. The workflow establishes zero-shot baselines
+on ESD and IEMOCAP, fine-tunes Voxtral-Mini-3B on the English subset of ESD
+with DoRA/LoRA adapters, evaluates cross-dataset generalization on IEMOCAP, and
+uses perturbation-based counterfactual analysis to inspect which temporal audio
+regions affect model predictions.
 
-1. Uses zero-shot baselines on ESD and IEMOCAP.
-2. Fine-tunes Voxtral-mini-3B on ESD with DoRA/LoRA adapters.
-3. Evaluates model performance, calibration, latency, and modality effects.
-4. Produces localized counterfactual explanations for selected predictions.
+## Research Questions
 
-This framing makes the repository suitable for a course project, thesis
-experiment, or reproducible research submission.
+1. How well does Voxtral-Mini-3B perform as a zero-shot SER classifier on ESD
+   and IEMOCAP?
+2. Does DoRA/LoRA fine-tuning on ESD improve performance and calibration over
+   zero-shot inference?
+3. How does performance change between audio-only and audio-plus-transcript
+   settings?
+4. Which local temporal regions most influence the model's emotion predictions,
+   and how do those local perturbations compare with random-region and
+   whole-utterance perturbations?
 
 ## Repository Structure
 
@@ -32,10 +44,17 @@ experiment, or reproducible research submission.
 |-- data/
 |   |-- README.md
 |   `-- raw/
+|       |-- README.md
 |       |-- ESD/
+|       |   `-- README.md
 |       `-- IEMOCAP/
+|           `-- README.md
 |-- docs/
+|   |-- DATASETS.md
 |   `-- REPRODUCIBILITY.md
+|-- report/
+|   |-- README.md
+|   `-- LG-ProXAI_SER_Report.pdf
 |-- script/
 |   |-- README.md
 |   |-- 01_data_exploration.ipynb
@@ -49,57 +68,68 @@ experiment, or reproducible research submission.
 |-- src/
 |   |-- README.md
 |   `-- EmoBox/
-|-- .gitignore
+|-- CITATION.cff
 |-- requirements.txt
 `-- README.md
 ```
 
+## Datasets
+
+Raw audio files are not committed because of file size and dataset licensing.
+Place local copies under `data/raw/ESD/` and `data/raw/IEMOCAP/`.
+
+| Dataset | Role in this project | Access link |
+| --- | --- | --- |
+| [ESD](https://www.kaggle.com/datasets/nguyenthanhlim/emotional-speech-dataset-esd) | Primary fine-tuning dataset; English speakers `0011`-`0020`; four labels used from the corpus. | Kaggle mirror |
+| [IEMOCAP](https://www.kaggle.com/datasets/dejolilandry/iemocapfullrelease) | Cross-dataset evaluation and generalization analysis after ESD fine-tuning. | Kaggle full-release mirror |
+
+Verify that your use complies with the official dataset licenses and access
+conditions before downloading or redistributing any material. Additional details
+are provided in [docs/DATASETS.md](docs/DATASETS.md).
+
 ## Method Summary
 
-### Data
+### Data Preparation
 
-The project uses two speech emotion datasets:
+The scripts use EmoBox-style metadata under `src/EmoBox/data/`. For example,
+ESD fold metadata is expected at:
 
-- ESD: Emotional Speech Dataset
-- IEMOCAP: Interactive Emotional Dyadic Motion Capture dataset
+```text
+src/EmoBox/data/esd/fold_2/esd_train_fold_2.jsonl
+src/EmoBox/data/esd/fold_2/esd_test_fold_2.jsonl
+```
 
-Raw audio files are not included because of size and licensing constraints. The
-expected local placement is documented in [data/README.md](data/README.md).
+The `--audio_root` argument should point to the local directory from which the
+metadata `wav` paths can be resolved.
 
 ### Fine-Tuning
 
-The training script adapts Voxtral-mini-3B using PEFT with DoRA enabled:
+The training script adapts `mistralai/Voxtral-Mini-3B-2507` with PEFT:
 
-- adapter rank: 16
+- DoRA/LoRA adapter rank: 16
 - LoRA alpha: 32
 - target modules: `q_proj`, `k_proj`, `v_proj`, `o_proj`
 - optional 4-bit loading through QLoRA
 - stratified validation split by emotion class
-- English-speaker filtering for ESD speakers 0011-0020
+- ESD English-speaker filtering for speakers `0011`-`0020`
 
-The script uses a user-only multimodal chat template and manually appends label
-tokens so that loss is computed only on the target emotion label.
+The training prompt uses a user-only multimodal chat template and appends label
+tokens manually so loss is computed only on the target emotion label.
 
 ### Evaluation
 
-The evaluation scripts report:
-
-- accuracy and balanced accuracy
-- macro and weighted F1
-- Matthews correlation coefficient
-- Cohen's kappa
-- confusion matrices
-- expected calibration error
-- selective accuracy/risk coverage
-- inference latency percentiles
-- McNemar tests for paired modality comparisons
+Evaluation scripts report accuracy, balanced accuracy, macro and weighted F1,
+Matthews correlation coefficient, Cohen's kappa, confusion matrices, expected
+calibration error, selective accuracy/risk coverage, inference latency
+percentiles, and McNemar tests for paired modality comparisons.
 
 ### Explainability
 
-The post-hoc explainability scripts read previous prediction files and generate
+The post-hoc explainability scripts consume saved prediction files and generate
 localized counterfactual analyses. They identify influential temporal regions
-with occlusion, perturb the most influential segments, and compare local
-counterfactual effects with random-region and whole-utterance perturbations.
+with occlusion, perturb the most influential regions, and compare local effects
+against random-region and whole-utterance perturbations. These reports explain
+model behavior, not human emotional state.
 
 ## Environment Setup
 
@@ -108,8 +138,8 @@ Create and activate a Python environment before installing dependencies.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 On Windows PowerShell:
@@ -118,31 +148,11 @@ On Windows PowerShell:
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 GPU execution is strongly recommended. Quantized training and inference require
 compatible CUDA, PyTorch, and `bitsandbytes` installations.
-
-## Data Preparation
-
-Place datasets under:
-
-```text
-data/raw/ESD/
-data/raw/IEMOCAP/
-```
-
-The scripts expect EmoBox-style metadata under `src/EmoBox/data`. For example,
-ESD fold metadata is expected at:
-
-```text
-src/EmoBox/data/esd/fold_2/esd_train_fold_2.jsonl
-src/EmoBox/data/esd/fold_2/esd_test_fold_2.jsonl
-```
-
-Depending on your local dataset layout, `--audio_root` should point to the
-directory from which the `wav` paths in the metadata can be resolved.
 
 ## Running the Workflow
 
@@ -225,8 +235,8 @@ python script/05_post_hoc_explainable_20_sample.py \
   --max_samples 20
 ```
 
-If your evaluation output is CSV rather than JSONL, use the corresponding
-argument supported by the explainability script.
+If evaluation output is stored as CSV rather than JSONL, use `--pred_csv`
+instead of `--pred_jsonl`.
 
 ## Expected Outputs
 
@@ -243,38 +253,40 @@ Typical generated outputs include:
 Generated outputs are intentionally ignored by Git. Keep only code,
 documentation, metadata, and small reproducibility artifacts in version control.
 
-## Reproducibility Notes
+## Reproducibility
 
-For each reported experiment, record:
-
-- dataset version and access date
-- model identifier or local checkpoint hash
-- random seed
-- fold index
-- command-line arguments
-- GPU type and CUDA/PyTorch versions
-- generated metrics and prediction files
-
-More detail is provided in [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
+For each reported experiment, record the dataset version and access date, model
+identifier or local checkpoint hash, random seed, fold index, command-line
+arguments, GPU type, CUDA/PyTorch versions, generated metrics, and prediction
+files. Use [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) as the experiment
+checklist.
 
 ## External Code
 
-The `src/EmoBox` directory contains the EmoBox framework used for dataset
-metadata and evaluation support. It is external source code included for
-reproducibility. See [src/README.md](src/README.md) and the upstream EmoBox
-README for details.
+`src/EmoBox` contains the EmoBox framework used for dataset metadata,
+preprocessing conventions, and evaluation support. It is external source code
+included for reproducibility. Project-specific training, evaluation, and
+explainability logic is implemented in `script/`.
 
 ## Ethical and Academic Considerations
 
-Speech emotion recognition is sensitive because predictions may be affected by
-speaker identity, language, recording quality, acted versus natural emotion, and
-annotation subjectivity. Results should be interpreted as dataset-conditioned
-classification performance, not as reliable inference of a person's internal
-state. Report limitations, failure cases, and subgroup analyses where possible.
+SER systems can encode dataset bias and may perform differently across speaker
+groups, languages, recording conditions, and acted versus natural speech.
+Results should be reported as model behavior on specified datasets and splits.
+Avoid claims that the model can reliably infer a person's true internal
+emotional state. Reports should include limitations, failure cases, licensing
+constraints, and subgroup or distribution-shift analyses where available.
+
+## License
+
+No project-level license file is currently included. Before reusing code,
+models, reports, or derived artifacts, verify the licensing terms for this
+repository, EmoBox, Voxtral, PEFT dependencies, and the underlying datasets. This
+repository does not redistribute raw ESD or IEMOCAP files.
 
 ## Citation
 
-If this repository is used in a report or thesis, cite the datasets, Voxtral,
+If this repository is used in a report, thesis, or paper, cite this repository
+using [CITATION.cff](CITATION.cff), and cite the datasets, Voxtral,
 PEFT/LoRA/DoRA methods, and EmoBox according to their official citation
-instructions. Add a project-specific citation once the final report metadata is
-available.
+instructions.

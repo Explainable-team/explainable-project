@@ -1,34 +1,25 @@
 # Emotional Speech Dataset (ESD)
 
-This folder is reserved for the **Emotional Speech Dataset (ESD)**.
+This folder is reserved for the Emotional Speech Dataset (ESD).
 
-ESD is a large-scale emotional speech dataset containing recordings from multiple
-speakers and emotion categories. In this project, ESD is mainly used for
-**fine-tuning** the model because it provides a relatively balanced distribution
-of emotions.
+Kaggle access link: https://www.kaggle.com/datasets/nguyenthanhlim/emotional-speech-dataset-esd
 
-IMPORTANT: The actual audio files are NOT included in this repository. The dataset must be downloaded separately from its official source and placed
-inside this folder following the original directory structure.
+The actual dataset files are not included in this repository. Download the data
+separately, verify the applicable license and citation requirements, and place
+the extracted files here using the original directory structure.
 
----
+## Use in This Project
 
-## How ESD is used in this project
-
-- Used as the **training dataset** for PEFT fine-tuning (LoRA / DoRA)
-- Only the **English-speaking subset** is used
-- Emotion labels are mapped to the following classes:
-  - Angry
-  - Happy
-  - Sad
-  - Neutral
-
----
+- Primary dataset for PEFT fine-tuning with LoRA/DoRA.
+- English-speaking speakers `0011`-`0020` are used by the training workflow.
+- The project maps labels to `Angry`, `Happy`, `Sad`, and `Neutral`.
 
 ## Expected Structure
 
 ```text
-ESD/
-├── 0001/
-├── 0002/
-├── ...
-├── 0020/
+data/raw/ESD/
+|-- 0001/
+|-- 0002/
+|-- ...
+`-- 0020/
+```

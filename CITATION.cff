@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite it using the metadata below and cite the underlying datasets and models separately."
+title: "Explainable Speech Emotion Recognition with Voxtral and DoRA"
+authors:
+  - family-names: "Shafiei"
+    given-names: "Ashkan"
+date-released: "2026-06-24"
+version: "0.1.0"
+repository-code: "https://github.com/Explainable-team/explainable-project"
+abstract: "A reproducible research workflow for speech emotion recognition with Voxtral-Mini-3B, DoRA/LoRA fine-tuning, cross-dataset evaluation on ESD and IEMOCAP, and localized post-hoc counterfactual explanations."

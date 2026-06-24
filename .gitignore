@@ -234,9 +234,18 @@ tensorboard/
 *.pth
 *.safetensors
 
-# Local raw or processed dataset material
-data/raw/**/*
+# Local raw or processed dataset material. Keep placeholder READMEs in Git,
+# but exclude protected raw audio, transcripts, video, and derived files.
+data/raw/*
 !data/raw/README.md
+!data/raw/ESD/
+!data/raw/ESD/README.md
+!data/raw/IEMOCAP/
+!data/raw/IEMOCAP/README.md
+data/raw/ESD/*
+!data/raw/ESD/README.md
+data/raw/IEMOCAP/*
+!data/raw/IEMOCAP/README.md
 data/processed/
 data/interim/
 

@@ -1,43 +1,37 @@
 # Data
 
-This directory is reserved for dataset files used by the project. Raw audio is
-not committed to the repository because of dataset licensing and file size.
+This directory documents the local dataset layout used by the project. Raw
+audio, transcripts, video files, checkpoints, generated reports, and other large
+artifacts are not committed to Git because of licensing and file-size
+constraints.
 
 ## Expected Layout
 
 ```text
 data/
-|-- raw/
-|   |-- ESD/
-|   `-- IEMOCAP/
-`-- README.md
+|-- README.md
+`-- raw/
+    |-- README.md
+    |-- ESD/
+    |   `-- README.md
+    `-- IEMOCAP/
+        `-- README.md
 ```
 
 ## Datasets
 
-### ESD
+| Dataset | Local path | Access |
+| --- | --- | --- |
+| [ESD](https://www.kaggle.com/datasets/nguyenthanhlim/emotional-speech-dataset-esd) | `data/raw/ESD/` | Kaggle mirror; verify the official license and citation requirements before use. |
+| [IEMOCAP](https://www.kaggle.com/datasets/dejolilandry/iemocapfullrelease) | `data/raw/IEMOCAP/` | Kaggle full-release mirror; verify official IEMOCAP access and redistribution restrictions before use. |
 
-The Emotional Speech Dataset should be downloaded from its official source and
-placed under:
+## Project-Specific Filtering
 
-```text
-data/raw/ESD/
-```
+The ESD training workflow currently uses the English-speaking subset, speakers
+`0011`-`0020`, and maps the task to `Angry`, `Happy`, `Sad`, and `Neutral`.
 
-The training script currently filters ESD to English speakers with IDs
-`0011`-`0020` and to the labels `Angry`, `Happy`, `Sad`, and `Neutral`.
-
-### IEMOCAP
-
-The Interactive Emotional Dyadic Motion Capture dataset should be obtained
-through its official access process and placed under:
-
-```text
-data/raw/IEMOCAP/
-```
-
-IEMOCAP has restrictive licensing. Do not commit audio, video, transcripts, or
-other protected files unless redistribution is explicitly permitted.
+The IEMOCAP evaluation workflow maps the task to the same four labels, with
+`Excited` treated as part of the `Happy` class when required by the experiment.
 
 ## Metadata
 

@@ -1,6 +1,8 @@
 # Reproducibility Checklist
 
-Use this checklist for every experiment reported from this repository.
+Use this checklist for every experiment reported from this repository. The goal
+is to make each reported number traceable to a dataset version, code state,
+model state, hardware configuration, and exact command.
 
 ## Environment
 
@@ -12,6 +14,7 @@ Record:
 - GPU model and VRAM
 - PyTorch version
 - `transformers`, `peft`, `datasets`, and `bitsandbytes` versions
+- repository commit hash
 
 Useful commands:
 
@@ -19,6 +22,7 @@ Useful commands:
 python --version
 python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'cpu')"
 python -c "import transformers, peft, datasets; print(transformers.__version__, peft.__version__, datasets.__version__)"
+git rev-parse HEAD
 ```
 
 ## Data
@@ -26,13 +30,13 @@ python -c "import transformers, peft, datasets; print(transformers.__version__, 
 Record:
 
 - dataset name and version
-- official download or access source
+- official source and any Kaggle mirror used
 - access date
 - local root path used for `--audio_root`
 - metadata path used for `--meta_dir`
 - fold index
 - label set
-- any speaker, language, duration, or class filtering
+- any speaker, language, duration, class, or transcript filtering
 
 For this project, the default label set is:
 
@@ -49,6 +53,7 @@ Record:
 - whether 4-bit loading was enabled
 - LoRA/DoRA rank, alpha, dropout, and target modules
 - random seed
+- checkpoint or adapter hash when available
 
 ## Training
 
@@ -66,7 +71,8 @@ Record the exact training command. At minimum, include:
 - batch size and gradient accumulation
 - `--load_in_4bit`, if used
 
-Save the final adapter and training logs.
+Save the final adapter, training logs, validation metrics, and any early
+stopping decision.
 
 ## Evaluation
 
@@ -106,7 +112,10 @@ state.
 Experiment ID:
 Date:
 Research question:
+Repository commit:
 Dataset:
+Dataset source:
+Dataset access date:
 Fold:
 Base model:
 Adapter:
@@ -115,5 +124,6 @@ Seed:
 Hardware:
 Key metrics:
 Output directory:
+Known limitations:
 Notes:
 ```
