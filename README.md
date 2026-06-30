@@ -184,6 +184,11 @@ data/raw/ESD/
 data/raw/IEMOCAP/
 ```
 
+| Dataset | Project role | Access link | Local path |
+| --- | --- | --- | --- |
+| Emotional Speech Database (ESD) | DoRA fine-tuning, in-domain evaluation, and ESD LG-ProXAI diagnostics. | [Kaggle: Emotional Speech Dataset ESD](https://www.kaggle.com/datasets/nguyenthanhlim/emotional-speech-dataset-esd) | `data/raw/ESD/` |
+| IEMOCAP Full Release | Cross-corpus evaluation and IEMOCAP LG-ProXAI diagnostics. | [Kaggle: IEMOCAP Full Release](https://www.kaggle.com/datasets/dejolilandry/iemocapfullrelease) | `data/raw/IEMOCAP/` |
+
 The scripts use EmoBox metadata from `src/EmoBox/data/`; `--audio_root` should
 point to the local directory from which the metadata `wav` paths can be
 resolved. See [docs/DATASETS.md](docs/DATASETS.md).
