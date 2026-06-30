@@ -13,8 +13,8 @@ indicate the recommended order.
 | `03_train_dora16a32_voxtral_esd.py` | Fine-tune Voxtral-Mini-3B on ESD with DoRA rank 16 and alpha 32. |
 | `04_eval_dora16a32_esd.py` | Evaluate a DoRA adapter on ESD in audio-only and audio-plus-text modes. |
 | `04_eval_dora16a32_iemocap.py` | Evaluate a DoRA adapter on IEMOCAP in audio-only and audio-plus-text modes. |
-| `05_post_hoc_explainable_20_sample.py` | Run localized counterfactual explanations on a small diagnostic sample. |
-| `05_post_hoc_explainable_1000_sample.py` | Run larger-scale localized counterfactual explanations with class-balancing options. |
+| `05_post_hoc_explainable_20_sample.py` | Run qualitative LG-ProXAI analysis with per-sample plots, deletion/keep-only checks, localized acoustic interventions, random controls, and global baselines. |
+| `05_post_hoc_explainable_1000_sample.py` | Run compact class-level LG-ProXAI statistics with predicted-class balancing, Top-2 local evidence, random controls, and global prosody perturbations. |
 
 ## Recommended Workflow
 
@@ -22,7 +22,27 @@ indicate the recommended order.
 2. Establish zero-shot baselines for ESD and IEMOCAP.
 3. Fine-tune the ESD DoRA adapter.
 4. Evaluate the adapter on ESD and IEMOCAP.
-5. Use saved prediction files as inputs for post-hoc explainability.
+5. Use saved audio-only prediction files as inputs for LG-ProXAI diagnostics.
+
+## LG-ProXAI Notes
+
+The 20-sample script is intended for qualitative inspection and rich report
+generation. The 1,000-sample script is intended for class-level statistics and
+paper tables. Both compare original and perturbed audio with a fixed
+forced-choice label scoring rule.
+
+Recommended large-run settings from the report are:
+
+```text
+--class_balance_mode predicted_class_balanced
+--max_samples 1000
+--segment_sec 0.5
+--top_k 2
+--random_n 3
+```
+
+Report LG-ProXAI outputs as perturbation sensitivity, not causal explanation.
+The forced-choice label score is not a calibrated probability.
 
 ## Output Policy
 

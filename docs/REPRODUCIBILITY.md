@@ -44,6 +44,13 @@ For this project, the default label set is:
 Angry, Happy, Sad, Neutral
 ```
 
+Project-specific label and split policy:
+
+- ESD adaptation uses English speakers `0011`-`0020`.
+- ESD Surprise is excluded from the adapted four-class setup.
+- IEMOCAP Excited is merged into Happy when four-class alignment is required.
+- The main LG-ProXAI report uses predicted-class-balanced diagnostic subsets.
+
 ## Model
 
 Record:
@@ -86,11 +93,13 @@ Record the exact evaluation command and preserve:
 - McNemar comparison files
 - latency summaries
 
-Report both audio-only and audio-plus-text results when available.
+Report both audio-only and audio-plus-text results when available. For the main
+LG-ProXAI acoustic interpretation, preserve the audio-only prediction file used
+as diagnostic input.
 
 ## Explainability
 
-For counterfactual explanations, record:
+For LG-ProXAI perturbation diagnostics, record:
 
 - input prediction file
 - sample selection strategy
@@ -98,13 +107,28 @@ For counterfactual explanations, record:
 - segment duration
 - number of top segments
 - perturbation types
+- forced-choice scoring configuration
+- random-control count and exclusion policy
+- global transformation list
+- whether original samples were rescored
 - random seed
 - output report directory
 
-When discussing explanations, distinguish between evidence that changed the
-model prediction and evidence that supports claims about human emotion. The
-counterfactual analysis explains model behavior, not the speaker's internal
-state.
+When discussing explanations, distinguish between evidence that changed the model
+score and evidence that supports claims about human emotion. LG-ProXAI explains
+model input-output sensitivity under tested perturbations, not the speaker's
+internal state and not the model's internal causal mechanism.
+
+Use the report terminology consistently:
+
+- `forced-choice label score`: normalized fixed-label score, not calibrated
+  probability
+- `local drop`: score decrease under selected temporal attenuation
+- `random control drop`: score decrease under same-duration random perturbation
+- `maximum observed global drop`: largest score decrease among the tested
+  utterance-level transformations
+- `mixed local-global sensitivity`: local evidence exceeds random controls but
+  the strongest global perturbation exceeds local evidence
 
 ## Recommended Experiment Log Template
 
